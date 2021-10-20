@@ -32,6 +32,38 @@ const mousePos = new THREE.Vector2();
 
 const doMatrixAutoUpdate = true;
 
+const urlParams = new URLSearchParams(window.location.search);
+const lowQuery = urlParams.get('low');
+const lowQuality = lowQuery === 'false' ? false : !!lowQuery ?? false;
+if (lowQuality)
+	console.info("Launching in low quality mode");
+
+const animate = lowQuality ? animateLow : animateHigh
+const targetFPS = 30;
+
+const clock = new THREE.Clock();
+const interval = 1 / targetFPS;
+let delta = 0;
+
+function animateLow() {
+	requestAnimationFrame(animateLow);
+	delta += clock.getDelta();
+
+	if (delta > interval) {
+		composer.render();
+
+		delta = delta % interval;
+	}
+}
+
+function animateHigh() {
+	requestAnimationFrame(animateHigh);
+	controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+
+	composer.render();
+	// render();
+}
+
 function onMouseMove(event) {
 	mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
 	mousePos.y = - (event.clientY / window.innerHeight) * 2 + 1;
@@ -171,7 +203,7 @@ function createStairs(stair) {
 
 		const horizontalBeamGeometry = new THREE.BoxGeometry(railWidth, railWidth, railLength);
 		const horizontalBeamDistance = (railHeight / 4);
-		console.log(horizontalBeamDistance)
+
 		for (let i = 1; i < 5; i++) {
 			const horizontalBeam = new THREE.Mesh(horizontalBeamGeometry, material);
 			horizontalBeam.position.x = stairSideOffset;
@@ -257,7 +289,7 @@ function createRail(rail) {
 
 	const horizontalBeamGeometry = new THREE.BoxGeometry(rail.length, railWidth, railWidth);
 	const horizontalBeamDistance = (railHeight / 4);
-	console.log(horizontalBeamDistance)
+
 	for (let i = 1; i < 5; i++) {
 		const horizontalBeam = new THREE.Mesh(horizontalBeamGeometry, material);
 		horizontalBeam.position.x = rail.length / 2;
@@ -293,7 +325,6 @@ export function showScene() {
 	createGUI();
 	createObjects();
 	animate();
-	console.log(scene)
 }
 
 function init() {
@@ -307,7 +338,7 @@ function init() {
 	renderer = new THREE.WebGLRenderer();
 	// renderer = new THREE.WebGLRenderer({ antialias: true });
 	// renderer.setPixelRatio(window.devicePixelRatio * 1.5);
-	renderer.setPixelRatio(window.devicePixelRatio);
+	renderer.setPixelRatio(window.devicePixelRatio * (lowQuality ? 1 : 1.5));
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	renderer.shadowMap.enabled = true;
 
@@ -422,14 +453,5 @@ function loadModel(path, scale = 1){
 	});
 }
 
-function animate() {
-	requestAnimationFrame(animate);
-	controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
 
-	composer.render();
-	// render();
-}
 
-function render() {
-	renderer.render(scene, camera);
-}

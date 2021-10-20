@@ -320,37 +320,37 @@ export default {
         {
             "id": 0,
             "type": "low",
-            "position": [0, 36.125],
+            "position": [0, 36.25],
             "floor": 2,
         },
         {
             "id": 0,
             "type": "low",
-            "position": [4, 36.125],
+            "position": [4, 36.25],
             "floor": 2
         },
         {
             "id": 0,
             "type": "low",
-            "position": [8, 36.125],
+            "position": [8, 36.25],
             "floor": 2
         },
         {
             "id": 0,
             "type": "low",
-            "position": [0, 38.125],
+            "position": [0, 38.75],
             "floor": 2,
         },
         {
             "id": 0,
             "type": "low",
-            "position": [4, 38.125],
+            "position": [4, 38.75],
             "floor": 2
         },
         {
             "id": 0,
             "type": "low",
-            "position": [8, 38.125],
+            "position": [8, 38.75],
             "floor": 2
         },
         //#endregion
@@ -456,37 +456,37 @@ export default {
         {
             "id": 0,
             "type": "low",
-            "position": [13, 36.125],
+            "position": [13, 36.25],
             "floor": 2,
         },
         {
             "id": 0,
             "type": "low",
-            "position": [17, 36.125],
+            "position": [17, 36.25],
             "floor": 2
         },
         {
             "id": 0,
             "type": "low",
-            "position": [21, 36.125],
+            "position": [21, 36.25],
             "floor": 2
         },
         {
             "id": 0,
             "type": "low",
-            "position": [13, 38.125],
+            "position": [13, 38.75],
             "floor": 2,
         },
         {
             "id": 0,
             "type": "low",
-            "position": [17, 38.125],
+            "position": [17, 38.75],
             "floor": 2
         },
         {
             "id": 0,
             "type": "low",
-            "position": [21, 38.125],
+            "position": [21, 38.75],
             "floor": 2
         },
         //#endregion
