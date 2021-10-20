@@ -23,6 +23,9 @@ const containerSizes = {
 const stairSize = [2, floorHeight, floorHeight];
 const catwalkHeight = 0.2;
 const beamWidth = 0.2;
+const railWidth = 0.1;
+const railHeight = 1.2;
+const defaultRailBeamDistance = 3;
 
 const raycaster = new THREE.Raycaster();
 const mousePos = new THREE.Vector2();
@@ -47,20 +50,25 @@ function onObjClick(event) {
 	if (intersects[0].object.geometry.type !== "PlaneGeometry") {
 		console.log(intersects[0].object);
 
+		let selectedObject = intersects[0].object.parent.type === "Group" ?
+			intersects[0].object.parent : intersects[0].object;
+		// selectedObject = selectedObject.parent.type === "Group" ?
+		// 	selectedObject.parent : selectedObject.object;
+
 		gui.destroy();
 		gui = new dat.GUI();
-		const cubeFolder = gui.addFolder('Cube')
-		cubeFolder.add(intersects[0].object.position, 'x', 0, 100)
-		cubeFolder.add(intersects[0].object.position, 'y', 0, 100)
-		cubeFolder.add(intersects[0].object.position, 'z', 0, 100)
-		cubeFolder.add(intersects[0].object.rotation, 'x', 0, Math.PI * 2)
-		cubeFolder.add(intersects[0].object.rotation, 'y', 0, Math.PI * 2)
-		cubeFolder.add(intersects[0].object.rotation, 'z', 0, Math.PI * 2)
+		const cubeFolder = gui.addFolder('Obj')
+		cubeFolder.add(selectedObject.position, 'x', -10.0, 50.0, 0.01)
+		cubeFolder.add(selectedObject.position, 'y', -10.0, 50.0, 0.01)
+		cubeFolder.add(selectedObject.position, 'z', -10.0, 50.0, 0.01)
+		cubeFolder.add(selectedObject.rotation, 'x', 0, Math.PI * 2)
+		cubeFolder.add(selectedObject.rotation, 'y', 0, Math.PI * 2)
+		cubeFolder.add(selectedObject.rotation, 'z', 0, Math.PI * 2)
 		cubeFolder.open()
 
 
-		outlinePass.selectedObjects = [intersects[0].object]
-		controls.target = new THREE.Vector3(...intersects[0].object.position);
+		outlinePass.selectedObjects = [selectedObject]
+		controls.target = new THREE.Vector3(...selectedObject.position);
 
 		// const cameraFolder = gui.addFolder('Camera')
 		// cameraFolder.add(camera.position, 'z', 0, 10)
@@ -124,7 +132,7 @@ function createFullStairs(stair) {
 function createStairs(stair) {
 	const numOfStairs = 10;
 	const stepSize = stairSize[1] / numOfStairs;
-	const material = new THREE.MeshBasicMaterial({ color: 'gray', wireframe: true });
+	const material = new THREE.MeshNormalMaterial({ color: 'gray', wireframe: false });
 	const stairGroup = new THREE.Group();
 	stairGroup.position.x = stair.position[0];
 	stairGroup.position.z = stair.position[1];
@@ -135,10 +143,54 @@ function createStairs(stair) {
 		mesh.position.x = 0;
 		mesh.position.y = ((stair.floor ?? 0) * stairSize[1]) + (i * stepSize) + (stepSize / 2);
 		mesh.position.z = - (i * stepSize);
-		mesh.updateMatrix();
-		mesh.matrixAutoUpdate = doMatrixAutoUpdate;
+		// mesh.updateMatrix();
+		// mesh.matrixAutoUpdate = doMatrixAutoUpdate;
 		stairGroup.add(mesh);
 	}
+
+	if (stair.rails) {
+		const railDistance = 1.5;
+		const railGroup = new THREE.Group();
+		const railLength = Math.sqrt(2) * stairSize[1];
+		const verticalBeamGeometry = new THREE.BoxGeometry(railWidth, railHeight, railWidth);
+		const numOfVerticalBeams = Math.ceil(railLength / railDistance);
+		const verticalBeamDistance = railLength / numOfVerticalBeams;
+
+		const stairSideOffset = stair.rails === "left" ? - 1 : 1;
+
+		for (let i = 0; i < numOfVerticalBeams; i++) {
+			const verticalBeam = new THREE.Mesh(verticalBeamGeometry, material);
+			verticalBeam.position.x = stairSideOffset;
+			verticalBeam.position.y = (railHeight) * (i + 1);
+			verticalBeam.position.z = -(i * verticalBeamDistance);
+			// verticalBeam.updateMatrix();
+			// verticalBeam.matrixAutoUpdate = doMatrixAutoUpdate;
+
+			railGroup.add(verticalBeam)
+		}
+
+		const horizontalBeamGeometry = new THREE.BoxGeometry(railWidth, railWidth, railLength);
+		const horizontalBeamDistance = (railHeight / 4);
+		console.log(horizontalBeamDistance)
+		for (let i = 1; i < 5; i++) {
+			const horizontalBeam = new THREE.Mesh(horizontalBeamGeometry, material);
+			horizontalBeam.position.x = stairSideOffset;
+			horizontalBeam.position.y = (horizontalBeamDistance * (i + 1)) + stairSize[1] / 2;
+			horizontalBeam.position.z = (stairSize.length / 2) - stairSize[2];
+			// horizontalBeam.position.z = -1;
+			// horizontalBeam.position.y = 3;
+			horizontalBeam.rotateX(Math.PI / 4)
+			// horizontalBeam.updateMatrix();
+			// horizontalBeam.matrixAutoUpdate = doMatrixAutoUpdate;
+			railGroup.add(horizontalBeam)
+		}
+
+		railGroup.position.y = -0.4;
+
+		stairGroup.add(railGroup);
+	}
+
+	stairGroup.rotateY(Math.PI);
 
 	if (stair.rotation)
 		stairGroup.rotateY(THREE.Math.degToRad(stair.rotation));
@@ -164,23 +216,60 @@ function createCatwalk(catwalk) {
 
 	catwalkGroup.add(topPart);
 
-	const beamXOffset = catwalk.size[0] / 2;
-	const beamYOffset = catwalk.size[1] / 2;
-	const beamPositions = [
-		[-beamXOffset + beamWidth, -beamYOffset + beamWidth],
-		[-beamXOffset + beamWidth, beamYOffset - beamWidth],
-		[beamXOffset - beamWidth, -beamYOffset + beamWidth],
-		[beamXOffset - beamWidth, beamYOffset - beamWidth]]
-	const beamGeometry = new THREE.BoxGeometry(beamWidth, floorHeight - (catwalkHeight / 2), beamWidth);
-	for (const beamPosition of beamPositions) {
-		const beam = new THREE.Mesh(beamGeometry, material);
-		beam.position.x = beamPosition[0];
-		beam.position.y = beamGeometry.parameters.height / 2;
-		beam.position.z = beamPosition[1];
-		catwalkGroup.add(beam);
-	}
+	// const beamXOffset = catwalk.size[0] / 2;
+	// const beamYOffset = catwalk.size[1] / 2;
+	// const beamPositions = [
+	// 	[-beamXOffset + beamWidth, -beamYOffset + beamWidth],
+	// 	[-beamXOffset + beamWidth, beamYOffset - beamWidth],
+	// 	[beamXOffset - beamWidth, -beamYOffset + beamWidth],
+	// 	[beamXOffset - beamWidth, beamYOffset - beamWidth]]
+	// const beamGeometry = new THREE.BoxGeometry(beamWidth, floorHeight - (catwalkHeight / 2), beamWidth);
+	// for (const beamPosition of beamPositions) {
+	// 	const beam = new THREE.Mesh(beamGeometry, material);
+	// 	beam.position.x = beamPosition[0];
+	// 	beam.position.y = beamGeometry.parameters.height / 2;
+	// 	beam.position.z = beamPosition[1];
+	// 	catwalkGroup.add(beam);
+	// }
 
 	scene.add(catwalkGroup);
+}
+
+function createRail(rail) {
+	const railGroup = new THREE.Group();
+
+	railGroup.position.x = rail.position[0];
+	railGroup.position.y = floorHeight * (rail.floor ?? 1);
+	railGroup.position.z = rail.position[1];
+
+	const material = new THREE.MeshNormalMaterial({ color: 'gray' });
+	const verticalBeamGeometry = new THREE.BoxGeometry(railWidth, railHeight, railWidth);
+	const numOfVerticalBeams = rail.numOfBeams ?? (Math.ceil(rail.length / defaultRailBeamDistance));
+	const verticalBeamDistance = rail.length / numOfVerticalBeams;
+
+	for (let i = 0; i <= numOfVerticalBeams; i++) {
+		const verticalBeam = new THREE.Mesh(verticalBeamGeometry, material);
+		verticalBeam.position.x = (i * verticalBeamDistance);
+		verticalBeam.position.y = railHeight / 2;
+		verticalBeam.position.z = 0;
+		railGroup.add(verticalBeam)
+	}
+
+	const horizontalBeamGeometry = new THREE.BoxGeometry(rail.length, railWidth, railWidth);
+	const horizontalBeamDistance = (railHeight / 4);
+	console.log(horizontalBeamDistance)
+	for (let i = 1; i < 5; i++) {
+		const horizontalBeam = new THREE.Mesh(horizontalBeamGeometry, material);
+		horizontalBeam.position.x = rail.length / 2;
+		horizontalBeam.position.y = horizontalBeamDistance * i;
+		horizontalBeam.position.z = 0;
+		railGroup.add(horizontalBeam)
+	}
+
+	if (rail.rotation)
+		railGroup.rotateY(THREE.Math.degToRad(rail.rotation));
+
+	scene.add(railGroup);
 }
 
 function createObjects() {
@@ -192,6 +281,9 @@ function createObjects() {
 	}
 	for (const catwalk of warehouse.catwalks) {
 		createCatwalk(catwalk);
+	}
+	for (const rail of warehouse.rails) {
+		createRail(rail);
 	}
 }
 
@@ -252,6 +344,11 @@ function addPostProcessing() {
 	composer.addPass(renderPass);
 
 	outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
+	outlinePass.pulsePeriod = 3;
+	outlinePass.edgeThickness = 2.5;
+	outlinePass.edgeStrength = 5;
+	outlinePass.edgeGlow = 2;
+	// outlinePass.visibleEdgeColor = 'red';
 	composer.addPass(outlinePass);
 
 	effectFXAA = new ShaderPass(FXAAShader);
