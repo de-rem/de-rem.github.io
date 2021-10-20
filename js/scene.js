@@ -89,17 +89,18 @@ function onObjClick(event) {
 
 		gui.destroy();
 		gui = new dat.GUI();
-		const cubeFolder = gui.addFolder('Obj')
-		cubeFolder.add(selectedObject.position, 'x', -10.0, 50.0, 0.01)
-		cubeFolder.add(selectedObject.position, 'y', -10.0, 50.0, 0.01)
-		cubeFolder.add(selectedObject.position, 'z', -10.0, 50.0, 0.01)
-		cubeFolder.add(selectedObject.rotation, 'x', 0, Math.PI * 2)
-		cubeFolder.add(selectedObject.rotation, 'y', 0, Math.PI * 2)
-		cubeFolder.add(selectedObject.rotation, 'z', 0, Math.PI * 2)
-		cubeFolder.open()
+		const objFolder = gui.addFolder('Obj')
+		objFolder.add(selectedObject.position, 'x', -10.0, 50.0, 0.01)
+		objFolder.add(selectedObject.position, 'y', -10.0, 50.0, 0.01)
+		objFolder.add(selectedObject.position, 'z', -10.0, 50.0, 0.01)
+		// objFolder.add(selectedObject.rotation, 'x', 0, Math.PI * 2)
+		// objFolder.add(selectedObject.rotation, 'y', 0, Math.PI * 2)
+		// objFolder.add(selectedObject.rotation, 'z', 0, Math.PI * 2)
+		objFolder.add(selectedObject, 'name')
+		objFolder.open()
 
 
-		outlinePass.selectedObjects = [selectedObject]
+		outlinePass.selectedObjects = [selectedObject];
 		controls.target = new THREE.Vector3(...selectedObject.position);
 
 		// const cameraFolder = gui.addFolder('Camera')
@@ -131,6 +132,8 @@ function createContainer(container) {
 	mesh.position.z = container.position[1];
 	if (container.rotation)
 		mesh.rotateY(THREE.Math.degToRad(container.rotation));
+
+	mesh.name = container.id;
 	mesh.updateMatrix();
 	mesh.matrixAutoUpdate = doMatrixAutoUpdate;
 	scene.add(mesh);
@@ -437,7 +440,7 @@ function onWindowResize() {
 	effectFXAA.uniforms['resolution'].value.set(1 / (window.innerWidth * pixelRatio), 1 / (window.innerHeight * pixelRatio));
 }
 
-function loadModel(path, scale = 1){
+function loadModel(path, scale = 1) {
 	const loader = new GLTFLoader();
 
 	loader.load(`./js/models/${path}`, function (gltf) {
@@ -453,5 +456,17 @@ function loadModel(path, scale = 1){
 	});
 }
 
+window.showWarehouse = () => {
+	var id = prompt("Kérjük adja meg a raktárszámot!");
+	console.log(scene)
 
+	if (id) {
+		for (const children of scene.children) {
+			if (children.type == "Mesh" && children.name == id) {
+				outlinePass.selectedObjects = [children];
+				controls.target = new THREE.Vector3(...children.position);
+			}
+		}
+	}
 
+}
