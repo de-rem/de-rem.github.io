@@ -24,7 +24,7 @@ export default {
             "rails": "right"
         }
     ],
-    "catwalks": [
+    "platforms": [
         {
             "position": [24.5, 13.75],
             "size": [3, 5]
