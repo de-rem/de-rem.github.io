@@ -21,16 +21,40 @@ const containerSizes = {
 }
 
 const stairSize = [1.25, floorHeight, floorHeight];
-const catwalkHeight = 0.2;
-const beamWidth = 0.2;
+const numOfStairs = 10;
+const stairStepSize = stairSize[1] / numOfStairs;
+const railDistance = 1.5;
+const railLength = Math.sqrt(2) * stairSize[1];
 const railWidth = 0.1;
 const railHeight = 1.2;
+const numOfVerticalBeams = Math.ceil(railLength / railDistance);
+const verticalBeamDistance = railLength / numOfVerticalBeams;
+const horizontalBeamDistance = (railHeight / 4);
+const platformHeight = 0.2;
 const defaultRailBeamDistance = 3;
 
 const raycaster = new THREE.Raycaster();
 const mousePos = new THREE.Vector2();
 
-const doMatrixAutoUpdate = true;
+const sharedMaterial = new THREE.MeshNormalMaterial();
+
+const geometries = {
+	containers: {
+		normal: new THREE.BoxBufferGeometry(...containerSizes["normal"]),
+		long: new THREE.BoxBufferGeometry(...containerSizes["long"]),
+		low: new THREE.BoxBufferGeometry(...containerSizes["low"])
+	},
+	stairs: {
+		stair: new THREE.BoxBufferGeometry(stairSize[0], stairStepSize, stairStepSize),
+		verticalBeam: new THREE.BoxBufferGeometry(railWidth, railHeight, railWidth),
+		horizontalBeam: new THREE.BoxBufferGeometry(railWidth, railWidth, railLength)
+	},
+	platforms: {},
+	rails: {
+		vertical: new THREE.BoxBufferGeometry(railWidth, railHeight, railWidth),
+		horizontal: {}
+	}
+}
 
 const urlParams = new URLSearchParams(window.location.search);
 const lowQuery = urlParams.get('low');
@@ -58,10 +82,21 @@ function animateLow() {
 
 function animateHigh() {
 	requestAnimationFrame(animateHigh);
-	controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+	controls.update();
 
 	composer.render();
-	// render();
+}
+
+function createGeometries() {
+	for (const platform of warehouse.platforms) {
+		const platformId = `${platform.size[0]}_${platform.size[1]}`;
+		if (!geometries.platforms[platformId])
+			geometries.platforms[platformId] = new THREE.BoxBufferGeometry(platform.size[0], platformHeight, platform.size[1]);
+	}
+	for (const rail of warehouse.rails) {
+		if (!geometries.rails[rail.length])
+			geometries.rails.horizontal[rail.length] = new THREE.BoxBufferGeometry(rail.length, railWidth, railWidth);
+	}
 }
 
 function onMouseMove(event) {
@@ -96,7 +131,10 @@ function onObjClick(event) {
 		// objFolder.add(selectedObject.rotation, 'x', 0, Math.PI * 2)
 		// objFolder.add(selectedObject.rotation, 'y', 0, Math.PI * 2)
 		// objFolder.add(selectedObject.rotation, 'z', 0, Math.PI * 2)
-		objFolder.add(selectedObject, 'name')
+		objFolder.add(renderer.info.render, 'triangles')
+		objFolder.add(renderer.info.render, 'calls')
+		objFolder.add(renderer.info.memory, 'textures')
+		objFolder.add(renderer.info.memory, 'geometries')
 		objFolder.open()
 
 
@@ -116,17 +154,15 @@ function onObjClick(event) {
 
 function createGUI() {
 	gui = new dat.GUI();
-
 }
 
 function createContainer(container) {
-	const geometry = new THREE.BoxBufferGeometry(...containerSizes[container.type]);
+	// const geometry = new THREE.BoxBufferGeometry(...containerSizes[container.type]);
 	// const material = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x111111, shininess: 5 });
 	// material.receiveShadow = true;
 	// material.castShadow = true;
 	// const material = new THREE.MeshStandardMaterial({ color: 'blue' });
-	const material = new THREE.MeshNormalMaterial({ color: 'blue', wireframe: false });
-	const mesh = new THREE.Mesh(geometry, material);
+	const mesh = new THREE.Mesh(geometries.containers[container.type], sharedMaterial);
 	mesh.position.x = container.position[0];
 	mesh.position.y = ((containerSizes[container.type][1]) + ((container.floor ?? 0) * floorHeight)) / 2;
 	mesh.position.z = container.position[1];
@@ -134,89 +170,41 @@ function createContainer(container) {
 		mesh.rotateY(THREE.Math.degToRad(container.rotation));
 
 	mesh.name = container.id;
-	mesh.updateMatrix();
-	mesh.matrixAutoUpdate = doMatrixAutoUpdate;
 	scene.add(mesh);
 }
 
-function createFullStairs(stair) {
-	const numOfStairs = 10;
-	const stepSize = stairSize[1] / numOfStairs;
-	const material = new THREE.MeshBasicMaterial({ color: 'gray', wireframe: true });
-	const stairGroup = new THREE.Group();
-	stairGroup.position.x = stair.position[0];
-	stairGroup.position.z = stair.position[1];
-
-	for (let i = 0; i < numOfStairs; i++) {
-		const geometry = new THREE.BoxBufferGeometry(stairSize[0], stepSize, stairSize[2] - (i * stepSize));
-		const mesh = new THREE.Mesh(geometry, material);
-		mesh.position.x = 0;
-		mesh.position.y = ((stair.floor ?? 0) * stairSize[1]) + (i * stepSize) + (stepSize / 2);
-		mesh.position.z = - (i * stepSize / 2);
-		mesh.updateMatrix();
-		mesh.matrixAutoUpdate = doMatrixAutoUpdate;
-		stairGroup.add(mesh);
-	}
-
-	if (stair.rotation)
-		stairGroup.rotateY(THREE.Math.degToRad(stair.rotation));
-
-	scene.add(stairGroup);
-}
-
 function createStairs(stair) {
-	const numOfStairs = 10;
-	const stepSize = stairSize[1] / numOfStairs;
-	const material = new THREE.MeshNormalMaterial({ color: 'gray', wireframe: false });
 	const stairGroup = new THREE.Group();
 	stairGroup.position.x = stair.position[0];
 	stairGroup.position.z = stair.position[1];
 
 	for (let i = 0; i < numOfStairs; i++) {
-		const geometry = new THREE.BoxBufferGeometry(stairSize[0], stepSize, stepSize);
-		const mesh = new THREE.Mesh(geometry, material);
+		const mesh = new THREE.Mesh(geometries.stairs.stair, sharedMaterial);
 		mesh.position.x = 0;
-		mesh.position.y = ((stair.floor ?? 0) * stairSize[1]) + (i * stepSize) + (stepSize / 2);
-		mesh.position.z = - (i * stepSize);
-		// mesh.updateMatrix();
-		// mesh.matrixAutoUpdate = doMatrixAutoUpdate;
+		mesh.position.y = ((stair.floor ?? 0) * stairSize[1]) + (i * stairStepSize) + (stairStepSize / 2);
+		mesh.position.z = - (i * stairStepSize);
 		stairGroup.add(mesh);
 	}
 
 	if (stair.rails) {
-		const railDistance = 1.5;
 		const railGroup = new THREE.Group();
-		const railLength = Math.sqrt(2) * stairSize[1];
-		const verticalBeamGeometry = new THREE.BoxBufferGeometry(railWidth, railHeight, railWidth);
-		const numOfVerticalBeams = Math.ceil(railLength / railDistance);
-		const verticalBeamDistance = railLength / numOfVerticalBeams;
-
 		const stairSideOffset = stair.rails === "left" ? - 0.65 : 0.65;
 
 		for (let i = 0; i < numOfVerticalBeams; i++) {
-			const verticalBeam = new THREE.Mesh(verticalBeamGeometry, material);
+			const verticalBeam = new THREE.Mesh(geometries.stairs.verticalBeam, sharedMaterial);
 			verticalBeam.position.x = stairSideOffset;
 			verticalBeam.position.y = (railHeight) * (i + 1);
 			verticalBeam.position.z = -(i * verticalBeamDistance);
-			// verticalBeam.updateMatrix();
-			// verticalBeam.matrixAutoUpdate = doMatrixAutoUpdate;
 
 			railGroup.add(verticalBeam)
 		}
 
-		const horizontalBeamGeometry = new THREE.BoxBufferGeometry(railWidth, railWidth, railLength);
-		const horizontalBeamDistance = (railHeight / 4);
-
 		for (let i = 1; i < 5; i++) {
-			const horizontalBeam = new THREE.Mesh(horizontalBeamGeometry, material);
+			const horizontalBeam = new THREE.Mesh(geometries.stairs.horizontalBeam, sharedMaterial);
 			horizontalBeam.position.x = stairSideOffset;
 			horizontalBeam.position.y = (horizontalBeamDistance * (i + 1)) + stairSize[1] / 2;
 			horizontalBeam.position.z = (stairSize.length / 2) - stairSize[2];
-			// horizontalBeam.position.z = -1;
-			// horizontalBeam.position.y = 3;
 			horizontalBeam.rotateX(Math.PI / 4)
-			// horizontalBeam.updateMatrix();
-			// horizontalBeam.matrixAutoUpdate = doMatrixAutoUpdate;
 			railGroup.add(horizontalBeam)
 		}
 
@@ -233,44 +221,15 @@ function createStairs(stair) {
 	scene.add(stairGroup);
 }
 
-function createCatwalk(catwalk) {
-	const catwalkGroup = new THREE.Group();
-	catwalkGroup.position.x = catwalk.position[0];
-	catwalkGroup.position.z = catwalk.position[1];
+function createPlatform(platform) {
+	const platformMesh = new THREE.Mesh(geometries.platforms[`${platform.size[0]}_${platform.size[1]}`], sharedMaterial);
+	platformMesh.position.x = platform.position[0];
+	platformMesh.position.y = floorHeight - (platformHeight / 2);
+	platformMesh.position.z = platform.position[1];
+	if (platform.rotation)
+		platformMesh.rotateY(THREE.Math.degToRad(platform.rotation));
 
-	const material = new THREE.MeshNormalMaterial({ color: 'gray' });
-
-	const topPartGeometry = new THREE.BoxBufferGeometry(catwalk.size[0], catwalkHeight, catwalk.size[1]);
-	const topPart = new THREE.Mesh(topPartGeometry, material);
-
-	topPart.position.x = 0;
-	topPart.position.y = floorHeight - (catwalkHeight / 2);
-	topPart.position.z = 0;
-	topPart.updateMatrix();
-	topPart.matrixAutoUpdate = doMatrixAutoUpdate;
-
-	catwalkGroup.add(topPart);
-
-	if (catwalk.rotation)
-		catwalkGroup.rotateY(THREE.Math.degToRad(catwalk.rotation));
-
-	// const beamXOffset = catwalk.size[0] / 2;
-	// const beamYOffset = catwalk.size[1] / 2;
-	// const beamPositions = [
-	// 	[-beamXOffset + beamWidth, -beamYOffset + beamWidth],
-	// 	[-beamXOffset + beamWidth, beamYOffset - beamWidth],
-	// 	[beamXOffset - beamWidth, -beamYOffset + beamWidth],
-	// 	[beamXOffset - beamWidth, beamYOffset - beamWidth]]
-	// const beamGeometry = new THREE.BoxBufferGeometry(beamWidth, floorHeight - (catwalkHeight / 2), beamWidth);
-	// for (const beamPosition of beamPositions) {
-	// 	const beam = new THREE.Mesh(beamGeometry, material);
-	// 	beam.position.x = beamPosition[0];
-	// 	beam.position.y = beamGeometry.parameters.height / 2;
-	// 	beam.position.z = beamPosition[1];
-	// 	catwalkGroup.add(beam);
-	// }
-
-	scene.add(catwalkGroup);
+	scene.add(platformMesh);
 }
 
 function createRail(rail) {
@@ -280,24 +239,20 @@ function createRail(rail) {
 	railGroup.position.y = floorHeight * (rail.floor ?? 1);
 	railGroup.position.z = rail.position[1];
 
-	const material = new THREE.MeshNormalMaterial({ color: 'gray' });
-	const verticalBeamGeometry = new THREE.BoxBufferGeometry(railWidth, railHeight, railWidth);
 	const numOfVerticalBeams = rail.numOfBeams ?? (Math.ceil(rail.length / defaultRailBeamDistance));
 	const verticalBeamDistance = rail.length / numOfVerticalBeams;
 
 	for (let i = 0; i <= numOfVerticalBeams; i++) {
-		const verticalBeam = new THREE.Mesh(verticalBeamGeometry, material);
+		const verticalBeam = new THREE.Mesh(geometries.rails.vertical, sharedMaterial);
 		verticalBeam.position.x = (i * verticalBeamDistance);
 		verticalBeam.position.y = railHeight / 2;
 		verticalBeam.position.z = 0;
 		railGroup.add(verticalBeam)
 	}
 
-	const horizontalBeamGeometry = new THREE.BoxBufferGeometry(rail.length, railWidth, railWidth);
-	const horizontalBeamDistance = (railHeight / 4);
 
 	for (let i = 1; i < 5; i++) {
-		const horizontalBeam = new THREE.Mesh(horizontalBeamGeometry, material);
+		const horizontalBeam = new THREE.Mesh(geometries.rails.horizontal[rail.length], sharedMaterial);
 		horizontalBeam.position.x = rail.length / 2;
 		horizontalBeam.position.y = horizontalBeamDistance * i;
 		horizontalBeam.position.z = 0;
@@ -317,8 +272,8 @@ function createObjects() {
 	for (const stair of warehouse.stairs) {
 		createStairs(stair);
 	}
-	for (const catwalk of warehouse.catwalks) {
-		createCatwalk(catwalk);
+	for (const platform of warehouse.platforms) {
+		createPlatform(platform);
 	}
 	for (const rail of warehouse.rails) {
 		createRail(rail);
@@ -327,43 +282,41 @@ function createObjects() {
 
 export function showScene() {
 	init();
-	//render(); // remove when using next line for animation loop (requestAnimationFrame)
-	createGUI();
-	createObjects();
 	animate();
 }
 
 function init() {
 	scene = new THREE.Scene();
 	scene.background = new THREE.Color(0xcccccc);
-	// scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
 
 	var axesHelper = new THREE.AxesHelper(5);
 	scene.add(axesHelper);
 
-	renderer = new THREE.WebGLRenderer();
-	// renderer = new THREE.WebGLRenderer({ antialias: true });
-	// renderer.setPixelRatio(window.devicePixelRatio * 1.5);
+	createGeometries();
+	addPlane();
+	createObjects();
+
+	renderer = new THREE.WebGLRenderer({ powerPreference: "high-performance" });
 	renderer.setPixelRatio(window.devicePixelRatio * (lowQuality ? 1 : 1.5));
 	renderer.setSize(window.innerWidth, window.innerHeight);
-	renderer.shadowMap.enabled = true;
 
 	document.body.appendChild(renderer.domElement);
 
-	camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+	camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 500);
 	camera.position.set(0, 20, 0);
 
 	createControls();
+	createGUI();
 	addPostProcessing();
-	addPlane();
-	addLights();
+	// addLights();
+
+	window.addEventListener('resize', onWindowResize);
 }
 
 function createControls() {
 	controls = new OrbitControls(camera, renderer.domElement);
-	controls.listenToKeyEvents(window); // optional
-	//controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
-	controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+	controls.listenToKeyEvents(window);
+	controls.enableDamping = true;
 	controls.dampingFactor = 0.05;
 
 	controls.screenSpacePanning = false;
@@ -386,7 +339,6 @@ function addPostProcessing() {
 	outlinePass.edgeThickness = 2.5;
 	outlinePass.edgeStrength = 5;
 	outlinePass.edgeGlow = 2;
-	// outlinePass.visibleEdgeColor = 'red';
 	composer.addPass(outlinePass);
 
 	effectFXAA = new ShaderPass(FXAAShader);
@@ -404,22 +356,6 @@ function addPlane() {
 }
 
 function addLights() {
-	// const light = new THREE.DirectionalLight(0xddffdd, 0.6);
-	// light.position.set(1, 1, 1);
-	// light.castShadow = true;
-	// light.shadow.mapSize.width = 1024;
-	// light.shadow.mapSize.height = 1024;
-
-	// const d = 10;
-
-	// light.shadow.camera.left = - d;
-	// light.shadow.camera.right = d;
-	// light.shadow.camera.top = d;
-	// light.shadow.camera.bottom = - d;
-	// light.shadow.camera.far = 1000;
-
-	// scene.add(light);
-
 	const dirLight1 = new THREE.DirectionalLight(0xffffff);
 	dirLight1.position.set(1, 1, 1);
 	scene.add(dirLight1);
@@ -430,8 +366,6 @@ function addLights() {
 
 	const ambientLight = new THREE.AmbientLight(0x222222);
 	scene.add(ambientLight);
-
-	window.addEventListener('resize', onWindowResize);
 }
 
 function onWindowResize() {
