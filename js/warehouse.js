@@ -9,9 +9,19 @@ const containerWidth = 2.5;
 export default {
     "stairs": [
         {
-            "position": [16.5, 15.25],
+            "position": [16.5, 15.65],
             "rotation": 90,
             "rails": "left"
+        },
+        {
+            "position": [55.5, 25.7],
+            "rotation": 270,
+            "rails": "right"
+        },
+        {
+            "position": [25.5, 25.7],
+            "rotation": 270,
+            "rails": "right"
         }
     ],
     "catwalks": [
@@ -20,12 +30,29 @@ export default {
             "size": [3, 5]
         },
         {
-            "position": [21.1, 15.25],
-            "size": [3.9, 2]
+            "position": [21.1, 15.65],
+            "size": [3.9, 1.25]
         },
         {
             "position": [7.25, 31.25],
             "size": [2.5, 10]
+        },
+        {
+            "position": [21.75, 31.25],
+            "size": [2.5, 10]
+        },
+        {
+            "position": [36.5, 31.25],
+            "size": [3, 10]
+        },
+        {
+            "position": [51.5, 31.25],
+            "size": [3, 12.5]
+        },
+        {
+            "position": [36.5, 26.3],
+            "size": [1.25, 4],
+            "rotation": 110
         }
     ],
     "rails": [
@@ -39,17 +66,17 @@ export default {
             "rotation": 90
         },
         {
-            "position": [19, 14.25],
+            "position": [19, 15],
             "length": [4]
         },
         {
-            "position": [23, 14.25],
-            "length": [5.5],
+            "position": [23, 15],
+            "length": [6.2],
             "rotation": 90
         },
         {
             "position": [-5.9, 26.3],
-            "length": [20],
+            "length": [29],
         },
         {
             "position": [-5.9, 27.55],
@@ -74,6 +101,14 @@ export default {
             "position": [34.9, 11.25],
             "length": [2.5],
             "rotation": 90
+        },
+        {
+            "position": [20.5, 36.2],
+            "length": [2.5],
+        },
+        {
+            "position": [50, 25.1],
+            "length": [3],
         }
     ],
     "containers": [
@@ -469,7 +504,7 @@ export default {
             "position": [25, 27.5]
         },
         {
-            "id": 102,
+            "id": 34,
             "type": "long",
             "position": [32, 30]
         },
@@ -479,7 +514,7 @@ export default {
             "position": [29, 27.5]
         },
         {
-            "id": 0,
+            "id": 39,
             "type": "normal",
             "position": [33, 27.5]
         },
@@ -489,7 +524,7 @@ export default {
             "position": [26, 32.5]
         },
         {
-            "id": 103,
+            "id": 29,
             "type": "long",
             "position": [32, 32.5]
         },
@@ -535,7 +570,7 @@ export default {
             "position": [26, 35]
         },
         {
-            "id": 0,
+            "id": 27,
             "type": "long",
             "position": [32, 35]
         },
@@ -558,6 +593,264 @@ export default {
             "floor": 2
         },
         //#endregion
-         //#endregion
+        //#region 4
+        {
+            "id": 8,
+            "type": "long",
+            "position": [41, 31.25]
+        },
+        {
+            "id": 0,
+            "type": "long",
+            "position": [47, 31.25]
+        },
+        {
+            "id": 26,
+            "type": "long",
+            "position": [41, 28.75]
+        },
+        {
+            "id": 0,
+            "type": "long",
+            "position": [47, 28.75]
+        },
+        {
+            "id": 24,
+            "type": "normal",
+            "position": [40, 26.25]
+        },
+        {
+            "id": 23,
+            "type": "normal",
+            "position": [44, 26.25]
+        },
+        {
+            "id": 0,
+            "type": "normal",
+            "position": [48, 26.25]
+        },
+        {
+            "id": 13,
+            "type": "long",
+            "position": [41, 33.75]
+        },
+        {
+            "id": 0,
+            "type": "long",
+            "position": [47, 33.75]
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [40, 30],
+            "floor": 2,
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [44, 30],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [48, 30],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [40, 26.25],
+            "floor": 2,
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [44, 26.25],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [48, 26.25],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [40, 32.5],
+            "floor": 2,
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [44, 32.5],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [48, 32.5],
+            "floor": 2
+        },
+        {
+            "id": 18,
+            "type": "long",
+            "position": [41, 36.25]
+        },
+        {
+            "id": 0,
+            "type": "long",
+            "position": [47, 36.25]
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [40, 36.25],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [44, 36.25],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [48, 36.25],
+            "floor": 2
+        },
+        //#endregion
+        //#region 5
+        {
+            "id": 0,
+            "type": "long",
+            "position": [56, 32.5]
+        },
+        {
+            "id": 0,
+            "type": "long",
+            "position": [62, 32.5]
+        },
+        {
+            "id": 0,
+            "type": "long",
+            "position": [56, 30]
+        },
+        {
+            "id": 0,
+            "type": "long",
+            "position": [62, 30]
+        },
+        {
+            "id": 0,
+            "type": "normal",
+            "position": [55, 27.5]
+        },
+        {
+            "id": 0,
+            "type": "normal",
+            "position": [59, 27.5]
+        },
+        {
+            "id": 0,
+            "type": "normal",
+            "position": [63, 27.5]
+        },
+        {
+            "id": 0,
+            "type": "long",
+            "position": [56, 35]
+        },
+        {
+            "id": 0,
+            "type": "long",
+            "position": [62, 35]
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [55, 31.25],
+            "floor": 2,
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [59, 31.25],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [63, 31.25],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [55, 27.5],
+            "floor": 2,
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [59, 27.5],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [63, 27.5],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [55, 33.75],
+            "floor": 2,
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [59, 33.75],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [63, 33.75],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "long",
+            "position": [56, 37.5]
+        },
+        {
+            "id": 0,
+            "type": "long",
+            "position": [62, 37.5]
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [55, 37.5],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [59, 37.5],
+            "floor": 2
+        },
+        {
+            "id": 0,
+            "type": "low",
+            "position": [63, 37.5],
+            "floor": 2
+        },
+        //#endregion
+        //#endregion
     ]
 }

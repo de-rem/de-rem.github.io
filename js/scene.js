@@ -20,7 +20,7 @@ const containerSizes = {
 	"long": [6, 2.8, 2.5]
 }
 
-const stairSize = [2, floorHeight, floorHeight];
+const stairSize = [1.25, floorHeight, floorHeight];
 const catwalkHeight = 0.2;
 const beamWidth = 0.2;
 const railWidth = 0.1;
@@ -90,9 +90,9 @@ function onObjClick(event) {
 		gui.destroy();
 		gui = new dat.GUI();
 		const objFolder = gui.addFolder('Obj')
-		objFolder.add(selectedObject.position, 'x', -10.0, 50.0, 0.01)
-		objFolder.add(selectedObject.position, 'y', -10.0, 50.0, 0.01)
-		objFolder.add(selectedObject.position, 'z', -10.0, 50.0, 0.01)
+		objFolder.add(selectedObject.position, 'x', -10.0, 80.0, 0.01)
+		objFolder.add(selectedObject.position, 'y', -10.0, 80.0, 0.01)
+		objFolder.add(selectedObject.position, 'z', -10.0, 80.0, 0.01)
 		// objFolder.add(selectedObject.rotation, 'x', 0, Math.PI * 2)
 		// objFolder.add(selectedObject.rotation, 'y', 0, Math.PI * 2)
 		// objFolder.add(selectedObject.rotation, 'z', 0, Math.PI * 2)
@@ -120,7 +120,7 @@ function createGUI() {
 }
 
 function createContainer(container) {
-	const geometry = new THREE.BoxGeometry(...containerSizes[container.type]);
+	const geometry = new THREE.BoxBufferGeometry(...containerSizes[container.type]);
 	// const material = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x111111, shininess: 5 });
 	// material.receiveShadow = true;
 	// material.castShadow = true;
@@ -148,7 +148,7 @@ function createFullStairs(stair) {
 	stairGroup.position.z = stair.position[1];
 
 	for (let i = 0; i < numOfStairs; i++) {
-		const geometry = new THREE.BoxGeometry(stairSize[0], stepSize, stairSize[2] - (i * stepSize));
+		const geometry = new THREE.BoxBufferGeometry(stairSize[0], stepSize, stairSize[2] - (i * stepSize));
 		const mesh = new THREE.Mesh(geometry, material);
 		mesh.position.x = 0;
 		mesh.position.y = ((stair.floor ?? 0) * stairSize[1]) + (i * stepSize) + (stepSize / 2);
@@ -173,7 +173,7 @@ function createStairs(stair) {
 	stairGroup.position.z = stair.position[1];
 
 	for (let i = 0; i < numOfStairs; i++) {
-		const geometry = new THREE.BoxGeometry(stairSize[0], stepSize, stepSize);
+		const geometry = new THREE.BoxBufferGeometry(stairSize[0], stepSize, stepSize);
 		const mesh = new THREE.Mesh(geometry, material);
 		mesh.position.x = 0;
 		mesh.position.y = ((stair.floor ?? 0) * stairSize[1]) + (i * stepSize) + (stepSize / 2);
@@ -187,11 +187,11 @@ function createStairs(stair) {
 		const railDistance = 1.5;
 		const railGroup = new THREE.Group();
 		const railLength = Math.sqrt(2) * stairSize[1];
-		const verticalBeamGeometry = new THREE.BoxGeometry(railWidth, railHeight, railWidth);
+		const verticalBeamGeometry = new THREE.BoxBufferGeometry(railWidth, railHeight, railWidth);
 		const numOfVerticalBeams = Math.ceil(railLength / railDistance);
 		const verticalBeamDistance = railLength / numOfVerticalBeams;
 
-		const stairSideOffset = stair.rails === "left" ? - 1 : 1;
+		const stairSideOffset = stair.rails === "left" ? - 0.65 : 0.65;
 
 		for (let i = 0; i < numOfVerticalBeams; i++) {
 			const verticalBeam = new THREE.Mesh(verticalBeamGeometry, material);
@@ -204,7 +204,7 @@ function createStairs(stair) {
 			railGroup.add(verticalBeam)
 		}
 
-		const horizontalBeamGeometry = new THREE.BoxGeometry(railWidth, railWidth, railLength);
+		const horizontalBeamGeometry = new THREE.BoxBufferGeometry(railWidth, railWidth, railLength);
 		const horizontalBeamDistance = (railHeight / 4);
 
 		for (let i = 1; i < 5; i++) {
@@ -240,7 +240,7 @@ function createCatwalk(catwalk) {
 
 	const material = new THREE.MeshNormalMaterial({ color: 'gray' });
 
-	const topPartGeometry = new THREE.BoxGeometry(catwalk.size[0], catwalkHeight, catwalk.size[1]);
+	const topPartGeometry = new THREE.BoxBufferGeometry(catwalk.size[0], catwalkHeight, catwalk.size[1]);
 	const topPart = new THREE.Mesh(topPartGeometry, material);
 
 	topPart.position.x = 0;
@@ -251,6 +251,9 @@ function createCatwalk(catwalk) {
 
 	catwalkGroup.add(topPart);
 
+	if (catwalk.rotation)
+		catwalkGroup.rotateY(THREE.Math.degToRad(catwalk.rotation));
+
 	// const beamXOffset = catwalk.size[0] / 2;
 	// const beamYOffset = catwalk.size[1] / 2;
 	// const beamPositions = [
@@ -258,7 +261,7 @@ function createCatwalk(catwalk) {
 	// 	[-beamXOffset + beamWidth, beamYOffset - beamWidth],
 	// 	[beamXOffset - beamWidth, -beamYOffset + beamWidth],
 	// 	[beamXOffset - beamWidth, beamYOffset - beamWidth]]
-	// const beamGeometry = new THREE.BoxGeometry(beamWidth, floorHeight - (catwalkHeight / 2), beamWidth);
+	// const beamGeometry = new THREE.BoxBufferGeometry(beamWidth, floorHeight - (catwalkHeight / 2), beamWidth);
 	// for (const beamPosition of beamPositions) {
 	// 	const beam = new THREE.Mesh(beamGeometry, material);
 	// 	beam.position.x = beamPosition[0];
@@ -278,7 +281,7 @@ function createRail(rail) {
 	railGroup.position.z = rail.position[1];
 
 	const material = new THREE.MeshNormalMaterial({ color: 'gray' });
-	const verticalBeamGeometry = new THREE.BoxGeometry(railWidth, railHeight, railWidth);
+	const verticalBeamGeometry = new THREE.BoxBufferGeometry(railWidth, railHeight, railWidth);
 	const numOfVerticalBeams = rail.numOfBeams ?? (Math.ceil(rail.length / defaultRailBeamDistance));
 	const verticalBeamDistance = rail.length / numOfVerticalBeams;
 
@@ -290,7 +293,7 @@ function createRail(rail) {
 		railGroup.add(verticalBeam)
 	}
 
-	const horizontalBeamGeometry = new THREE.BoxGeometry(rail.length, railWidth, railWidth);
+	const horizontalBeamGeometry = new THREE.BoxBufferGeometry(rail.length, railWidth, railWidth);
 	const horizontalBeamDistance = (railHeight / 4);
 
 	for (let i = 1; i < 5; i++) {
@@ -421,7 +424,7 @@ function addLights() {
 	dirLight1.position.set(1, 1, 1);
 	scene.add(dirLight1);
 
-	const dirLight2 = new THREE.DirectionalLight(0x002288);
+	const dirLight2 = new THREE.DirectionalLight(0x02288);
 	dirLight2.position.set(- 1, - 1, - 1);
 	scene.add(dirLight2);
 
